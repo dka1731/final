@@ -530,15 +530,14 @@
         let currentProgress = 0;
         let isLoading = false;
 
-        function setProgress(target, cb) {
+        function setProgress(target, duration, cb) {
             const start = currentProgress;
             const diff = target - start;
-            const duration = 700;
             const startTime = performance.now();
 
             function frame(now) {
                 const t = Math.min((now - startTime) / duration, 1);
-                const eased = t * (2 - t);
+                const eased = t * (2 - t); // ease-out
                 const value = Math.round(start + diff * eased);
                 currentProgress = value;
                 progressBar.style.width = value + "%";
@@ -551,8 +550,11 @@
                     progressShell.dataset.progress = "100";
                 }
 
-                if (t < 1) requestAnimationFrame(frame);
-                else cb && cb();
+                if (t < 1) {
+                    requestAnimationFrame(frame);
+                } else if (cb) {
+                    cb();
+                }
             }
             requestAnimationFrame(frame);
         }
@@ -589,13 +591,14 @@
             }, 350);
         }
 
-        // MERCON / FIREWORKS SE-LAYAR
+        // MERCON / FIREWORKS SE-LAYAR PERMANEN
+        let fireworkTimer = null;
         function launchFirework() {
-            const duration = 5200;
-            const interval = 420;
-            let end = Date.now() + duration;
+            if (fireworkTimer !== null) return; // jangan dobel
 
-            let timer = setInterval(() => {
+            const interval = 420;
+
+            fireworkTimer = setInterval(() => {
                 const firework = document.createElement("div");
                 firework.className = "firework";
                 firework.style.left = Math.random() * window.innerWidth + "px";
@@ -623,8 +626,6 @@
 
                 document.body.appendChild(firework);
                 setTimeout(() => firework.remove(), 3000);
-
-                if (Date.now() > end) clearInterval(timer);
             }, interval);
         }
 
@@ -641,8 +642,8 @@
                 systemText.textContent = "Memverifikasi Instagram...";
                 window.open("https://www.instagram.com/mhrdkaalfnr/", "_blank");
 
-                setProgress(50);
-                setTimeout(() => {
+                // progress ke 50% pelan (sekitar 9 detik), habis itu baru status ganti
+                setProgress(50, 9000, () => {
                     igStatus.classList.remove("fail");
                     igStatus.classList.add("ok");
                     igStatus.textContent = "Terverifikasi";
@@ -651,7 +652,7 @@
                     step = "TT";
                     setLoading(false);
                     updateUI();
-                }, 4000);
+                });
             }
 
             // STEP TIKTOK
@@ -661,8 +662,8 @@
                 systemText.textContent = "Memverifikasi TikTok...";
                 window.open("https://www.tiktok.com/", "_blank");
 
-                setProgress(100);
-                setTimeout(() => {
+                // progress ke 100% pelan (9 detik), begitu full baru unlock
+                setProgress(100, 9000, () => {
                     ttStatus.classList.remove("fail");
                     ttStatus.classList.add("ok");
                     ttStatus.textContent = "Terverifikasi";
@@ -677,9 +678,9 @@
                         unlockSound.play();
                     } catch (e) { }
 
-                    // MERCON 1 MILYAR
+                    // MERCON 1 MILYAR - PERMANEN
                     launchFirework();
-                }, 4000);
+                });
             }
 
             // STEP DOWNLOAD
